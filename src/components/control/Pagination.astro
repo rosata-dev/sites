@@ -1,0 +1,163 @@
+---
+import type { Page } from "astro";
+import { Icon } from "astro-icon/components";
+import { url } from "../../utils/url-utils";
+
+interface Props {
+	page: Page;
+	class?: string;
+	style?: string;
+}
+
+const { page, style } = Astro.props;
+
+const HIDDEN = -1;
+
+const className = Astro.props.class;
+
+const ADJ_DIST = 2;
+const VISIBLE = ADJ_DIST * 2 + 1;
+
+// for test
+let count = 1;
+let l = page.currentPage;
+let r = page.currentPage;
+while (0 < l - 1 && r + 1 <= page.lastPage && count + 2 <= VISIBLE) {
+	count += 2;
+	l--;
+	r++;
+}
+while (0 < l - 1 && count < VISIBLE) {
+	count++;
+	l--;
+}
+while (r + 1 <= page.lastPage && count < VISIBLE) {
+	count++;
+	r++;
+}
+
+let pages: number[] = [];
+if (l > 1) pages.push(1);
+if (l === 3) pages.push(2);
+if (l > 3) pages.push(HIDDEN);
+for (let i = l; i <= r; i++) pages.push(i);
+if (r < page.lastPage - 2) pages.push(HIDDEN);
+if (r === page.lastPage - 2) pages.push(page.lastPage - 1);
+if (r < page.lastPage) pages.push(page.lastPage);
+
+const getPageUrl = (p: number) => {
+	if (p === 1) return "/";
+	return `/${p}/`;
+};
+---
+
+<nav class:list={[className, "pagination"]} style={style} aria-label="分页导航">
+    <a href={page.url.prev || ""} aria-label={page.url.prev ? "Previous Page" : null}
+       class:list={["page-arrow", {"page-arrow-disabled": page.url.prev == undefined}]}
+    >
+        <Icon name="fa6-solid:arrow-left" class="text-sm"></Icon>
+    </a>
+    <div class="page-numbers">
+        {pages.map((p) => {
+            if (p == HIDDEN)
+                return <span class="page-ellipsis">…</span>;
+            if (p == page.currentPage)
+                return <span class="page-current" aria-current="page">{p}</span>;
+            return <a href={url(getPageUrl(p))} aria-label={`Page ${p}`}
+                class="page-num"
+            >{p}</a>
+        })}
+    </div>
+    <a href={page.url.next || ""} aria-label={page.url.next ? "Next Page" : null}
+       class:list={["page-arrow", {"page-arrow-disabled": page.url.next == undefined}]}
+    >
+        <Icon name="fa6-solid:arrow-right" class="text-sm"></Icon>
+    </a>
+</nav>
+
+<style>
+    .pagination {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 1.1rem;
+    }
+
+    .page-numbers {
+        display: flex;
+        align-items: baseline;
+        gap: 1.35rem;
+    }
+
+    .page-num,
+    .page-current,
+    .page-ellipsis {
+        font-family: var(--font-display);
+        font-size: 1.05rem;
+        font-weight: 480;
+        color: var(--deep-text);
+    }
+
+    .page-num {
+        opacity: 0.5;
+        transition:
+            opacity 0.4s ease,
+            color 0.4s ease,
+            transform 0.5s var(--ease-out-expo);
+    }
+    .page-num:hover {
+        opacity: 1;
+        color: var(--primary);
+        transform: translateY(-2px);
+    }
+
+    .page-current {
+        font-style: italic;
+        font-size: 1.25rem;
+        color: var(--primary);
+        position: relative;
+        padding-bottom: 2px;
+    }
+    .page-current::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: -2px;
+        height: 1px;
+        background: linear-gradient(
+            to right,
+            transparent,
+            oklch(0.7 0.13 var(--hue) / 0.9),
+            transparent
+        );
+    }
+
+    .page-ellipsis {
+        opacity: 0.35;
+        letter-spacing: 0.1em;
+    }
+
+    .page-arrow {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 2.5rem;
+        height: 2.5rem;
+        border-radius: 999px;
+        border: 1px solid var(--line-divider);
+        color: var(--primary);
+        transition:
+            background-color 0.4s ease,
+            transform 0.5s var(--ease-out-expo),
+            opacity 0.3s ease;
+    }
+    .page-arrow:hover {
+        background: var(--btn-plain-bg-hover);
+        transform: translateY(-2px);
+    }
+    .page-arrow-disabled {
+        opacity: 0.22;
+        pointer-events: none;
+    }
+</style>

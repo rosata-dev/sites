@@ -1,0 +1,77 @@
+---
+import { Icon } from "astro-icon/components";
+import { type NavBarLink } from "../../types/config";
+import { url } from "../../utils/url-utils";
+
+interface Props {
+	links: NavBarLink[];
+}
+
+const links = Astro.props.links;
+---
+<div id="nav-menu-panel" class:list={["float-panel float-panel-closed fixed transition-all right-4 px-2 py-2"]}>
+    {links.map((link, i) => (
+        <a href={link.external ? link.url : url(link.url)} class="nav-menu-item group flex justify-between items-center py-2.5 pl-3 pr-2 rounded-lg gap-8
+            hover:bg-[var(--btn-plain-bg-hover)] active:bg-[var(--btn-plain-bg-active)] transition
+        "
+           style={`--i:${i}`}
+           target={link.external ? "_blank" : null}
+           data-nav-link
+           aria-label={link.name}
+        >
+            <div class="nav-menu-name transition group-hover:text-[var(--primary)] group-active:text-[var(--primary)]">
+                <span class="nav-menu-num">{String(i + 1).padStart(2, "0")}</span>
+                {link.name}
+            </div>
+            {!link.external && <Icon name="material-symbols:chevron-right-rounded"
+                  class="transition text-[1.25rem] text-[var(--primary)] group-hover:translate-x-0.5"
+            >
+            </Icon>}
+            {link.external && <Icon name="fa6-solid:arrow-up-right-from-square"
+                  class="transition text-[0.75rem] text-black/25 dark:text-white/25 -translate-x-1"
+            >
+            </Icon>}
+        </a>
+    ))}
+</div>
+
+<style>
+    .nav-menu-name {
+        display: flex;
+        align-items: baseline;
+        gap: 0.7rem;
+        font-family: var(--font-display);
+        font-size: 1.05rem;
+        font-weight: 540;
+        letter-spacing: 0.03em;
+        color: var(--deep-text);
+    }
+    :global(:root.dark) .nav-menu-name {
+        color: rgb(255 255 255 / 0.85);
+    }
+
+    .nav-menu-num {
+        font-style: italic;
+        font-size: 0.72rem;
+        font-weight: 480;
+        color: oklch(0.68 0.12 var(--hue));
+        opacity: 0.75;
+    }
+
+    /* staggered entrance each time the panel opens */
+    #nav-menu-panel:not(.float-panel-closed) .nav-menu-item {
+        animation: nav-menu-item-in 0.55s var(--ease-out-expo) both;
+        animation-delay: calc(var(--i) * 70ms);
+    }
+
+    @keyframes nav-menu-item-in {
+        from {
+            opacity: 0;
+            transform: translateX(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+</style>

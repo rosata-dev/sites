@@ -1,0 +1,83 @@
+---
+import { Icon } from "astro-icon/components";
+import { licenseConfig, profileConfig } from "../../config";
+import I18nKey from "../../i18n/i18nKey";
+import { i18n } from "../../i18n/translation";
+import { formatDateToYYYYMMDD } from "../../utils/date-utils";
+
+interface Props {
+	title: string;
+	slug: string;
+	pubDate: Date;
+	class: string;
+}
+
+const { title, pubDate } = Astro.props;
+const className = Astro.props.class;
+const profileConf = profileConfig;
+const licenseConf = licenseConfig;
+const postUrl = decodeURIComponent(Astro.url.toString());
+---
+<div class={`license-block relative transition overflow-hidden bg-[var(--license-block-bg)] py-6 px-6 ${className}`}>
+    <div class="license-label">版权 · COLOPHON</div>
+    <div class="license-title transition">
+        {title}
+    </div>
+    <a href={postUrl} class="link text-[var(--primary)] text-sm break-all">
+        {postUrl}
+    </a>
+    <div class="flex gap-8 mt-4">
+        <div>
+            <div class="license-meta-label">{i18n(I18nKey.author)}</div>
+            <div class="license-meta-value line-clamp-2">{profileConf.name}</div>
+        </div>
+        <div>
+            <div class="license-meta-label">{i18n(I18nKey.publishedAt)}</div>
+            <div class="license-meta-value tabular-nums line-clamp-2">{formatDateToYYYYMMDD(pubDate)}</div>
+        </div>
+        <div>
+            <div class="license-meta-label">{i18n(I18nKey.license)}</div>
+            <a href={licenseConf.url} target="_blank" class="link text-[var(--primary)] line-clamp-2">{licenseConf.name}</a>
+        </div>
+    </div>
+    <Icon name="fa6-brands:creative-commons" class="transition text-[15rem] absolute pointer-events-none right-6 top-1/2 -translate-y-1/2 text-black/5 dark:text-white/5"></Icon>
+</div>
+
+<style>
+    .license-block {
+        border-top: 1px solid var(--line-divider);
+    }
+
+    .license-label {
+        font-size: 0.68rem;
+        letter-spacing: 0.38em;
+        text-transform: uppercase;
+        color: oklch(0.62 0.08 var(--hue));
+        margin-bottom: 0.9rem;
+    }
+
+    .license-title {
+        font-family: var(--font-display);
+        font-size: 1.3rem;
+        font-weight: 540;
+        letter-spacing: 0.015em;
+        line-height: 1.35;
+        color: var(--deep-text);
+        margin-bottom: 0.35rem;
+    }
+
+    .license-meta-label {
+        font-size: 0.68rem;
+        letter-spacing: 0.28em;
+        text-transform: uppercase;
+        color: var(--deep-text);
+        opacity: 0.42;
+        margin-bottom: 0.3rem;
+    }
+
+    .license-meta-value {
+        color: var(--deep-text);
+        opacity: 0.85;
+        font-size: 0.95rem;
+    }
+</style>

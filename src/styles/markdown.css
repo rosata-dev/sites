@@ -1,0 +1,268 @@
+.custom-md {
+    h1 {
+        @apply text-3xl;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+        .anchor {
+            @apply transition -m-0.5 ml-[0.2ch] p-0.5 select-none opacity-0 no-underline !important;
+
+            .anchor-icon {
+                @apply mx-[0.45ch] !important;
+            }
+        }
+
+        &:hover {
+            .anchor {
+                @apply opacity-100 !important;
+            }
+        }
+    }
+
+    a:not(.no-styling) {
+        /* `link` + `expand-animation` from main.css, inlined: custom classes
+           cannot be @applied across separately-bundled CSS files */
+        @apply relative bg-none font-medium text-[var(--primary)]
+        underline decoration-[var(--link-underline)] decoration-1 decoration-dashed underline-offset-4
+        transition rounded-md p-1 -m-1 z-0
+        before:ease-out before:transition before:absolute before:rounded-[inherit] before:inset-0
+        before:scale-[0.85] hover:before:scale-100 before:-z-10
+        hover:before:bg-[var(--btn-plain-bg-hover)] active:before:bg-[var(--btn-plain-bg-active)] active:bg-none;
+        box-decoration-break: clone;
+        -webkit-box-decoration-break: clone;
+        display: inline-block;
+    
+        &:hover, &:active {
+            @apply decoration-transparent;
+            background: var(--btn-plain-bg-hover);
+            border-bottom: 1px dashed var(--link-hover);
+            text-decoration: none;
+        }
+    }
+
+    code {
+        @apply bg-[var(--inline-code-bg)] text-[var(--inline-code-color)] px-1 py-0.5 rounded-md overflow-hidden;
+
+        font-family: 'JetBrains Mono Variable', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, Courier New, monospace;
+        &:before {
+            content:none;
+        }
+        &:after {
+            content:none;
+        }
+
+        counter-reset: line;
+        span.line {
+            &:before {
+                @apply text-white/25 mr-4 w-4 inline-block;
+                content: counter(line);
+                counter-increment: line;
+                direction: rtl;
+            }
+            &:last-child:empty, &:last-child:has(> span:empty:only-child) {
+                display: none;
+            }
+        }
+    }
+
+    .copy-btn {
+        all: initial;
+        /* `btn-regular-dark` from main.css, inlined (see note above) */
+        @apply flex items-center justify-center
+        bg-[oklch(0.45_0.01_var(--hue))] hover:bg-[oklch(0.50_0.01_var(--hue))] active:bg-[oklch(0.55_0.01_var(--hue))]
+        dark:bg-[oklch(0.30_0.02_var(--hue))] dark:hover:bg-[oklch(0.35_0.03_var(--hue))] dark:active:bg-[oklch(0.40_0.03_var(--hue))]
+        opacity-0 shadow-lg shadow-black/50 absolute active:scale-90 h-8 w-8 top-3 right-3 text-sm rounded-lg transition-all ease-in-out z-20 cursor-pointer;
+    }
+    .frame:hover .copy-btn,
+    .frame:focus-within .copy-btn,
+    .copy-btn:focus-visible {
+        opacity: 1;
+    }
+
+    .copy-btn-icon {
+        @apply absolute top-1/2 left-1/2 transition -translate-x-1/2 -translate-y-1/2 w-4 h-4 fill-white pointer-events-none;
+    }
+    .copy-btn .copy-icon {
+        @apply opacity-100 fill-white dark:fill-white/75;
+    }
+    .copy-btn.success .copy-icon {
+        @apply opacity-0 fill-[var(--deep-text)]
+    }
+    .copy-btn .success-icon {
+        @apply opacity-0 fill-white;
+    }
+    .copy-btn.success .success-icon {
+        @apply opacity-100
+    }
+
+    .expressive-code {
+        @apply my-4;
+        ::selection {
+            @apply bg-[var(--codeblock-selection)];
+        }
+    }
+
+
+    ul, ol {
+        li::marker {
+            @apply text-[var(--primary)];
+        }
+    }
+
+    blockquote:not(.admonition) {
+        @apply not-italic border-transparent relative my-8 py-1 pl-10 pr-2;
+        font-family: var(--font-display);
+        font-size: 1.22rem;
+        font-weight: 440;
+        line-height: 1.85;
+        letter-spacing: 0.015em;
+        color: var(--deep-text);
+
+        &:before {
+            /* oversized hanging quotation glyph */
+            content: '\201C';
+            position: absolute;
+            left: -0.15em;
+            top: -0.28em;
+            font-family: var(--font-display);
+            font-size: 3.2em;
+            font-weight: 600;
+            line-height: 1;
+            color: oklch(0.72 0.12 var(--hue) / 0.4);
+            pointer-events: none;
+        }
+
+        &:after {
+            /* gradient spine replacing the plain bar */
+            @apply content-[''] absolute block left-3 top-1 bottom-1 w-[3px] rounded-full;
+            background: linear-gradient(
+                to bottom,
+                oklch(0.72 0.13 var(--hue) / 0.75),
+                oklch(0.72 0.13 var(--hue) / 0.12)
+            );
+        }
+
+        /* Remove the double quotes from default styles */
+        p:before, p:after {
+            @apply content-none;
+        }
+
+    }
+
+    /* Editorial drop cap on the opening paragraph — the essay begins
+       the way a printed journal would. */
+    > p:first-of-type::first-letter {
+        float: left;
+        font-family: var(--font-display);
+        font-size: 3.3em;
+        font-weight: 560;
+        line-height: 0.82;
+        padding: 0.06em 0.14em 0 0;
+        color: oklch(0.62 0.14 var(--hue));
+    }
+
+    ::selection {
+        background: oklch(0.68 0.13 var(--hue) / 0.28);
+    }
+    * ::selection {
+        background: oklch(0.68 0.13 var(--hue) / 0.28);
+    }
+
+    h2 {
+        font-family: var(--font-display);
+        font-weight: 560;
+        letter-spacing: 0.012em;
+        margin-top: 2.6em;
+    }
+
+    h3 {
+        font-family: var(--font-display);
+        font-weight: 520;
+        letter-spacing: 0.01em;
+    }
+
+    .katex-display-container {
+        max-width: 100%;
+        overflow-x: auto;
+        margin: 1em 0;
+    }
+
+    /* footnotes — printed-journal apparatus */
+    a[data-footnote-ref]:not(.no-styling) {
+        @apply p-0 -m-0 before:content-none;
+        font-size: 0.78em;
+        font-weight: 650;
+        text-decoration: none;
+        &:hover, &:active {
+            background: none;
+            border-bottom: none;
+            text-decoration: none;
+        }
+    }
+    a[data-footnote-backref] {
+        @apply text-[var(--primary)];
+        margin-left: 0.35rem;
+        text-decoration: none;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+    .footnotes {
+        @apply mt-14 pt-5;
+        border-top: 1px dashed var(--line-divider);
+        font-size: 0.86rem;
+        line-height: 1.75;
+        color: rgb(0 0 0 / 0.62);
+
+        html.dark & {
+            color: rgb(255 255 255 / 0.62);
+        }
+        #footnote-label {
+            display: none;
+        }
+        ol {
+            padding-left: 1.2rem;
+        }
+        li {
+            margin: 0.35rem 0;
+        }
+        li p {
+            display: inline;
+            margin: 0;
+        }
+    }
+
+    /* tables — ledger rules, display-serif head */
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 2rem 0;
+        font-size: 0.92em;
+        line-height: 1.6;
+    }
+    thead th {
+        font-family: var(--font-display);
+        font-weight: 560;
+        letter-spacing: 0.04em;
+        text-align: left;
+        padding: 0.6rem 0.9rem;
+        border-bottom: 2px solid oklch(0.62 0.12 var(--hue) / 0.55);
+    }
+    tbody td {
+        padding: 0.55rem 0.9rem;
+        border-bottom: 1px solid var(--line-divider);
+    }
+    tbody tr {
+        transition: background 0.25s ease;
+    }
+    @media (hover: hover) {
+        tbody tr:hover {
+            background: var(--btn-plain-bg-hover);
+        }
+    }
+
+}
+
+/* --deep-text is a light-mode-only value; pull-quotes inherited it and
+   went invisible on dark cards (same fix as the post-nav title) */
+html.dark .custom-md blockquote:not(.admonition) {
+    color: rgb(255 255 255 / 0.85);
+}

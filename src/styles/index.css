@@ -1,0 +1,15 @@
+/*
+ * Single global stylesheet entry.
+ *
+ * postcss-import inlines every file below BEFORE Tailwind expands @apply,
+ * which is what allows cross-file @apply of the custom component classes
+ * defined in main.css (e.g. `link`, `btn-regular-dark` used in markdown.css).
+ * Import this file once from the root layout.
+ */
+@import "./main.css";
+@import "./motion.css";
+@import "./transition.css";
+@import "./scrollbar.css";
+@import "./expressive-code.css";
+@import "./photoswipe.css";
+@import "./markdown.css";

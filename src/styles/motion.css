@@ -1,0 +1,366 @@
+/* ------------------------------------------------------------------ */
+/* Creative motion layer: grain, scrollbars, a11y guards               */
+/* ------------------------------------------------------------------ */
+
+/* Lenis recommended styles (it toggles these classes on <html>) */
+html.lenis,
+html.lenis body {
+    height: auto;
+}
+.lenis.lenis-smooth {
+    scroll-behavior: auto !important;
+}
+.lenis.lenis-stopped {
+    overflow: hidden;
+}
+
+/* Native scrollbar styling (replaces the body-level OverlayScrollbars) */
+html {
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-bg) transparent;
+}
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-bg);
+    border-radius: 8px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: var(--scrollbar-bg-hover);
+    background-clip: content-box;
+    border: 2px solid transparent;
+}
+::-webkit-scrollbar-thumb:active {
+    background: var(--scrollbar-bg-active);
+    background-clip: content-box;
+    border: 2px solid transparent;
+}
+
+/* Film grain overlay: animated SVG turbulence, blended over the page */
+#grain-overlay {
+    position: fixed;
+    inset: -100%;
+    width: 300%;
+    height: 300%;
+    pointer-events: none;
+    z-index: 60;
+    opacity: 0.032;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.72' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    animation: grain-shift 0.72s steps(3) infinite;
+}
+:root.dark #grain-overlay {
+    opacity: 0.05;
+}
+@keyframes grain-shift {
+    0% { transform: translate3d(0, 0, 0); }
+    33% { transform: translate3d(-2.5%, 1.5%, 0); }
+    66% { transform: translate3d(1.5%, -2.5%, 0); }
+    100% { transform: translate3d(0, 0, 0); }
+}
+
+/* Accessibility: honor prefers-reduced-motion everywhere */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+    #grain-overlay {
+        animation: none;
+    }
+}
+
+/* JS-driven motion is additionally gated by this class so components can
+   opt out via CSS too */
+html.reduced-motion [data-motion] {
+    animation: none !important;
+    transition: none !important;
+}
+
+/* Pre-hide reveal targets before the effects engine picks them up,
+   avoiding a flash of un-animated content. Only when JS motion is live. */
+html.fx [data-reveal] {
+    opacity: 0;
+}
+
+/* Reading progress bar (article pages only, driven by ScrollTrigger) */
+#reading-progress {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    z-index: 70;
+    pointer-events: none;
+    transform: scaleX(0);
+    transform-origin: left center;
+    opacity: 0;
+    transition: opacity 0.45s ease;
+    background: linear-gradient(
+        to right,
+        oklch(0.68 0.16 var(--hue)),
+        oklch(0.72 0.15 calc(var(--hue) + 45))
+    );
+}
+#reading-progress.is-active {
+    opacity: 1;
+}
+
+/* Navbar: frosted glass + hand-drawn underline sweep on links */
+.navbar-site-title {
+    font-family: var(--font-display);
+    font-weight: 580;
+    letter-spacing: 0.04em;
+}
+#navbar .card-base {
+    background: color-mix(in oklab, var(--card-bg) 74%, transparent);
+    backdrop-filter: blur(18px) saturate(1.5);
+    -webkit-backdrop-filter: blur(18px) saturate(1.5);
+}
+/* Keyboard navigation: hue focus ring + skip link */
+:focus-visible {
+    outline: 2px solid oklch(0.66 0.14 var(--hue) / 0.9);
+    outline-offset: 3px;
+}
+
+.skip-link {
+    position: fixed;
+    top: 0.75rem;
+    left: 0.75rem;
+    z-index: 200;
+    padding: 0.6rem 1.2rem;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    letter-spacing: 0.1em;
+    background: var(--float-panel-bg);
+    color: var(--deep-text);
+    box-shadow: 0 8px 32px -8px rgb(0 0 0 / 0.35);
+    transform: translateY(-4rem);
+    opacity: 0;
+    transition:
+        transform 0.4s var(--ease-out-expo),
+        opacity 0.3s ease;
+}
+.skip-link:focus-visible {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+/* Sidebar: same glass language, desktop only (blur is GPU-heavy) */
+@media (min-width: 1024px) {
+    #sidebar .card-base {
+        background: color-mix(in oklab, var(--card-bg) 76%, transparent);
+        backdrop-filter: blur(16px) saturate(1.4);
+        -webkit-backdrop-filter: blur(16px) saturate(1.4);
+    }
+}
+#navbar > div:first-child {
+    background: color-mix(in oklab, var(--card-bg) 74%, transparent);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+}
+@media (hover: hover) {
+    #navbar a.btn-plain::after {
+        content: "";
+        position: absolute;
+        left: 50%;
+        bottom: 5px;
+        width: calc(100% - 2rem);
+        height: 2px;
+        border-radius: 2px;
+        background: var(--primary);
+        opacity: 0.75;
+        transform: translateX(-50%) scaleX(0);
+        transform-origin: center;
+        transition: transform 0.55s var(--ease-out-expo);
+        pointer-events: none;
+    }
+    #navbar a.btn-plain:hover::after {
+        transform: translateX(-50%) scaleX(1);
+    }
+}
+
+/* CSS Houdini: register --hue so theme-hue changes animate smoothly */
+@property --hue {
+    syntax: "<number>";
+    inherits: true;
+    initial-value: 205;
+}
+html {
+    transition:
+        color 0.15s ease,
+        background-color 0.3s ease,
+        --hue 0.55s ease;
+}
+
+/* Page transition: ASCII character waterfall canvas (JS toggles visibility) */
+#ascii-transition {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    visibility: hidden;
+    image-rendering: pixelated;
+}
+
+/* Old-page snapshot stacked above the fresh page during the sweep; the
+   canvas clips it away along the wipe edge. Cloned nodes must not replay
+   their entrance animations or run transitions. */
+#ascii-wipe-snapshot {
+    position: fixed;
+    inset: 0;
+    z-index: 99;
+    pointer-events: none;
+    overflow: hidden;
+}
+#ascii-wipe-snapshot,
+#ascii-wipe-snapshot * {
+    animation: none !important;
+    transition: none !important;
+}
+/* entrance animations park their targets at opacity: 0 until the keyframe
+   fills them; with animations killed the clone would stay invisible, so
+   force the post-animation state */
+#ascii-wipe-snapshot .onload-animation {
+    opacity: 1 !important;
+    transform: none !important;
+}
+/* the old page's transparent gaps must not let the new page bleed through;
+   persistent chrome (navbar, banner, sidebar) lives outside the clone
+   regions and stays live/identical underneath */
+#ascii-wipe-snapshot > div {
+    background: var(--page-bg);
+}
+
+/* Sweep-synced shuffle decode (src/utils/shuffle-text.ts): unsettled slots
+   wear the theme color so the chaos zone is legible at a glance, then fade
+   back to body ink as each correct glyph swaps home */
+.shuffle-unit {
+    display: contents;
+}
+.shuffle-pending {
+    opacity: 0.55;
+    color: var(--primary);
+    transition:
+        opacity 0.18s ease,
+        color 0.18s ease;
+}
+/* the post title's per-char rise animation is suppressed inline by
+   shuffle-text.ts while shuffling and replayed per char as it settles */
+
+/* Current-page nav state (kept fresh across Swup swaps by Navbar.astro) */
+#navbar a[aria-current="page"] {
+    color: var(--primary);
+}
+
+/* Grain sits above the transition canvas for continuous film texture */
+#grain-overlay {
+    z-index: 110;
+}
+
+/* View Transitions: disable the default crossfade; the WAAPI clip-path
+   circle reveal in Navbar.astro drives the visual */
+::view-transition-old(root),
+::view-transition-new(root) {
+    animation: none;
+    mix-blend-mode: normal;
+}
+::view-transition-old(root) {
+    z-index: 1;
+}
+::view-transition-new(root) {
+    z-index: 2147483646;
+}
+
+/* Print: an essay should leave the browser as cleanly as it arrived.
+   Strip the apparatus, keep the typography. */
+@media print {
+    #navbar-wrapper,
+    #sidebar,
+    #toc-wrapper,
+    #banner,
+    #hero-canvas-wrapper,
+    #grain-overlay,
+    #inertia-cursor,
+    #reading-progress,
+    .back-to-top-btn,
+    #ascii-transition,
+    .site-footer .footer-title,
+    .post-nav,
+    .skip-link,
+    .copy-btn {
+        display: none !important;
+    }
+
+    html,
+    body {
+        background: #fff !important;
+    }
+
+    main {
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    .card-base,
+    .custom-md {
+        background: transparent !important;
+        box-shadow: none !important;
+        border: none !important;
+        backdrop-filter: none !important;
+    }
+
+    .custom-md {
+        color: #111 !important;
+        font-size: 11pt;
+        line-height: 1.8;
+    }
+    .custom-md a {
+        color: #111 !important;
+        text-decoration: underline;
+    }
+    .custom-md blockquote:not(.admonition):before {
+        color: oklch(0.6 0.05 0 / 0.35);
+    }
+    .custom-md pre,
+    .custom-md .expressive-code {
+        border: 1px solid #ccc !important;
+        box-shadow: none !important;
+        break-inside: avoid;
+    }
+    .custom-md h2,
+    .custom-md h3 {
+        break-after: avoid;
+    }
+    .custom-md img {
+        break-inside: avoid;
+    }
+
+    .post-title,
+    .post-title-char {
+        color: #000 !important;
+        animation: none !important;
+        transform: none !important;
+        opacity: 1 !important;
+    }
+
+    .site-footer {
+        margin-top: 2rem;
+        font-size: 9pt;
+    }
+}

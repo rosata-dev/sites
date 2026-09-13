@@ -1,0 +1,68 @@
+---
+interface Props {
+	badge?: string;
+	url?: string;
+	label?: string;
+}
+const { badge, url, label } = Astro.props;
+---
+<a href={url} aria-label={label}>
+    <button
+        class:list={`
+            w-full
+            h-10
+            rounded-lg
+            bg-none
+            hover:bg-[var(--btn-plain-bg-hover)]
+            active:bg-[var(--btn-plain-bg-active)]
+            transition-all
+            pl-2
+            hover:pl-3
+            
+            text-neutral-700
+            hover:text-[var(--primary)]
+            dark:text-neutral-300
+            dark:hover:text-[var(--primary)]
+        `
+        }
+    >
+        <div class="flex items-center justify-between relative mr-2">
+            <div class="overflow-hidden text-left whitespace-nowrap overflow-ellipsis  ">
+                <slot></slot>
+            </div>
+            { badge !== undefined && badge !== null && badge !== '' &&
+                <div class="link-badge transition ml-4">
+                    { badge }
+                </div>
+            }
+        </div>
+    </button>
+</a>
+
+<style>
+    .link-badge {
+        font-family: var(--font-display);
+        font-style: italic;
+        font-size: 0.82rem;
+        font-weight: 480;
+        min-width: 2rem;
+        height: 1.65rem;
+        padding: 0 0.6rem;
+        border-radius: 999px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: oklch(0.66 0.12 var(--hue));
+        border: 1px solid oklch(0.7 0.12 var(--hue) / 0.35);
+        transition:
+            color 0.4s ease,
+            border-color 0.4s ease,
+            background-color 0.4s ease;
+    }
+
+    button:hover .link-badge {
+        color: var(--primary);
+        border-color: oklch(0.7 0.13 var(--hue) / 0.7);
+        background: oklch(0.72 0.12 var(--hue) / 0.08);
+    }
+</style>

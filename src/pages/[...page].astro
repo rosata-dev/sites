@@ -1,0 +1,91 @@
+---
+import type { GetStaticPaths } from "astro";
+import Pagination from "../components/control/Pagination.astro";
+import PostPage from "../components/PostPage.astro";
+import { PAGE_SIZE } from "../constants/constants";
+import MainGridLayout from "../layouts/MainGridLayout.astro";
+import { getSortedPosts } from "../utils/content-utils";
+
+export const getStaticPaths = (async ({ paginate }) => {
+	const allBlogPosts = await getSortedPosts();
+	return paginate(allBlogPosts, { pageSize: PAGE_SIZE });
+}) satisfies GetStaticPaths;
+// https://github.com/withastro/astro/issues/6507#issuecomment-1489916992
+
+const { page } = Astro.props;
+
+const len = page.data.length;
+const isFirstPage = page.currentPage === 1;
+
+const marqueeWords = ["日常", "关系", "欲望", "语言", "自处", "迟疑", "片段", "心绪"];
+---
+
+<MainGridLayout>
+    {isFirstPage && (
+        <div class="flex items-baseline justify-between mb-1 px-1 select-none" data-reveal>
+            <span class="font-mono text-xs tracking-[0.32em] uppercase text-black/40 dark:text-white/40">Latest Entries · 最新随笔</span>
+            <span class="font-mono text-xs tabular-nums text-black/30 dark:text-white/30">{page.total} 篇</span>
+        </div>
+    )}
+    <PostPage page={page}></PostPage>
+    {isFirstPage && (
+        <div class="marquee" aria-hidden="true">
+            <div class="marquee-track font-display">
+                {[0, 1].map(() => (
+                    <span class="marquee-group">
+                        {marqueeWords.map((word, i) => (
+                            <>
+                                <span class:list={["marquee-word", { "marquee-word-outline": i % 2 === 1 }]}>{word}</span>
+                                <span class="marquee-dot">·</span>
+                            </>
+                        ))}
+                    </span>
+                ))}
+            </div>
+        </div>
+    )}
+    <Pagination class="mx-auto onload-animation" page={page} style={`animation-delay: calc(var(--content-delay) + ${(len)*50}ms)`}></Pagination>
+</MainGridLayout>
+
+<style>
+    .font-display {
+        font-family: var(--font-display);
+    }
+    .marquee {
+        overflow: hidden;
+        padding: 2.25rem 0 1.5rem;
+        margin-bottom: 0.5rem;
+        mask-image: linear-gradient(to right, transparent, black 12%, black 88%, transparent);
+    }
+    .marquee-track {
+        display: flex;
+        width: max-content;
+        animation: marquee-scroll 30s linear infinite;
+    }
+    .marquee-group {
+        display: flex;
+        align-items: baseline;
+        flex-shrink: 0;
+    }
+    .marquee-word {
+        font-size: clamp(1.6rem, 3vw, 2.6rem);
+        font-weight: 520;
+        font-style: italic;
+        line-height: 1.2;
+        margin-right: 1.75rem;
+        color: var(--btn-content);
+    }
+    .marquee-word-outline {
+        color: transparent;
+        -webkit-text-stroke: 1px var(--meta-divider);
+    }
+    .marquee-dot {
+        margin-right: 1.75rem;
+        color: var(--primary);
+        font-size: 1.4rem;
+    }
+    @keyframes marquee-scroll {
+        from { transform: translateX(0); }
+        to { transform: translateX(-50%); }
+    }
+</style>

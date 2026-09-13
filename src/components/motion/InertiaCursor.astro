@@ -1,0 +1,120 @@
+---
+/**
+ * InertiaCursor — two-layer trailing cursor (dot + lagging ring).
+ *
+ * Desktop fine-pointer devices only; completely absent for touch and
+ * reduced-motion users. Uses mix-blend-mode: difference so it inverts
+ * over both light and dark surfaces. Persists across Swup navigations
+ * (mounted in the root layout, outside the swapped containers).
+ */
+---
+
+<div id="cursor-dot" aria-hidden="true"></div>
+<div id="cursor-ring" aria-hidden="true"></div>
+
+<style>
+    #cursor-dot,
+    #cursor-ring {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        pointer-events: none;
+        border-radius: 9999px;
+        mix-blend-mode: difference;
+        z-index: 9998;
+        will-change: transform;
+    }
+    #cursor-dot {
+        width: 6px;
+        height: 6px;
+        background: #fff;
+    }
+    #cursor-ring {
+        width: 36px;
+        height: 36px;
+        border: 1.5px solid rgba(255, 255, 255, 0.85);
+        transition: width 0.35s var(--ease-out-expo), height 0.35s var(--ease-out-expo),
+            opacity 0.3s ease;
+    }
+    html.has-custom-cursor #cursor-dot,
+    html.has-custom-cursor #cursor-ring {
+        display: block;
+    }
+    /* ring expands over interactive elements */
+    html.has-custom-cursor.cursor-hot #cursor-ring {
+        width: 64px;
+        height: 64px;
+        opacity: 0.9;
+    }
+    /* keep the native cursor as the primary affordance; the ring is an accent */
+</style>
+
+<script>
+import { isTouch, motionOK } from "../../utils/motion";
+
+function initCursor() {
+    if (!motionOK() || isTouch()) return;
+    if (!window.matchMedia("(pointer: fine)").matches) return;
+
+    const dot = document.getElementById("cursor-dot");
+    const ring = document.getElementById("cursor-ring");
+    if (!dot || !ring) return;
+
+    const root = document.documentElement;
+    root.classList.add("has-custom-cursor");
+
+    let tx = window.innerWidth / 2;
+    let ty = window.innerHeight / 2;
+    let dx = tx;
+    let dy = ty;
+    let rx = tx;
+    let ry = ty;
+    let shown = false;
+
+    const onMove = (e: PointerEvent) => {
+        tx = e.clientX;
+        ty = e.clientY;
+        if (!shown) {
+            shown = true;
+            dx = rx = tx;
+            dy = ry = ty;
+        }
+        const target = e.target as Element | null;
+        const hot = target?.closest?.(
+            "a, button, [role='button'], input, textarea, select, [data-magnetic], .copy-btn",
+        );
+        root.classList.toggle("cursor-hot", !!hot);
+    };
+    window.addEventListener("pointermove", onMove, { passive: true });
+
+    let raf = 0;
+    const loop = () => {
+        raf = requestAnimationFrame(loop);
+        // dot: tight follow; ring: inertial trail
+        dx += (tx - dx) * 0.55;
+        dy += (ty - dy) * 0.55;
+        rx += (tx - rx) * 0.16;
+        ry += (ty - ry) * 0.16;
+        dot.style.transform = `translate3d(${dx - 3}px, ${dy - 3}px, 0)`;
+        const half = ring.offsetWidth / 2;
+        ring.style.transform = `translate3d(${rx - half}px, ${ry - half}px, 0)`;
+    };
+    raf = requestAnimationFrame(loop);
+
+    window.addEventListener(
+        "pagehide",
+        () => {
+            cancelAnimationFrame(raf);
+            window.removeEventListener("pointermove", onMove);
+        },
+        { once: true },
+    );
+}
+
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initCursor, { once: true });
+} else {
+    initCursor();
+}
+</script>

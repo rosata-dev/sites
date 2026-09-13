@@ -1,0 +1,36 @@
+.expressive-code {
+    .frame {
+        border-radius: 0.9rem;
+        overflow: hidden;
+        border: 1px solid oklch(0.55 0.06 var(--hue) / 0.28);
+        box-shadow:
+            0 1.25rem 2.75rem -1.75rem oklch(0.45 0.08 var(--hue) / 0.4),
+            0 0.25rem 0.9rem -0.4rem rgb(0 0 0 / 0.18) !important;
+        transition:
+            box-shadow 0.6s var(--ease-out-expo),
+            border-color 0.4s ease;
+    }
+
+    .frame:hover {
+        border-color: oklch(0.6 0.09 var(--hue) / 0.45);
+        box-shadow:
+            0 1.6rem 3.25rem -1.5rem oklch(0.45 0.1 var(--hue) / 0.5),
+            0 0.25rem 0.9rem -0.4rem rgb(0 0 0 / 0.2) !important;
+    }
+
+    /* title bar: a quiet divider instead of a hard tab edge */
+    .header {
+        border-bottom: 1px solid oklch(0.55 0.06 var(--hue) / 0.2);
+    }
+
+    .title {
+        font-family: "JetBrains Mono Variable", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        letter-spacing: 0.04em;
+    }
+
+    /* line-number gutter: quieter, wider track */
+    .ln {
+        opacity: 0.55;
+        padding-inline-end: 1.1rem !important;
+    }
+}

@@ -1,0 +1,236 @@
+---
+/**
+ * ShortcutsHelp — a quiet "?" dialog listing the keyboard layer.
+ * Lives outside the Swup containers (included by Layout), so one instance
+ * serves every page; opened by the `?` key, Esc/backdrop closes it.
+ */
+import { Icon } from "astro-icon/components";
+
+const shortcuts = [
+	{ keys: ["/"], label: "聚焦搜索" },
+	{ keys: ["Esc"], label: "关闭面板 / 退出搜索" },
+	{ keys: ["←", "→"], label: "文章页：下一篇 / 上一篇" },
+	{ keys: ["?"], label: "打开或关闭本面板" },
+];
+---
+
+<div id="shortcuts-overlay" class="shortcuts-overlay" hidden>
+    <div class="shortcuts-backdrop" data-shortcuts-close></div>
+    <div class="shortcuts-card" role="dialog" aria-modal="true" aria-labelledby="shortcuts-title">
+        <div class="shortcuts-head">
+            <span id="shortcuts-title" class="shortcuts-title">键盘快捷键 · SHORTCUTS</span>
+            <button type="button" class="shortcuts-close" data-shortcuts-close aria-label="关闭快捷键面板">
+                <Icon name="fa6-solid:xmark" />
+            </button>
+        </div>
+        <ul class="shortcuts-list">
+            {shortcuts.map((s) => (
+                <li class="shortcuts-row">
+                    <span class="shortcuts-keys">
+                        {s.keys.map((k) => <kbd class="shortcuts-kbd">{k}</kbd>)}
+                    </span>
+                    <span class="shortcuts-label">{s.label}</span>
+                </li>
+            ))}
+        </ul>
+        <div class="shortcuts-foot">任何页面可用 · 输入文字时自动豁免</div>
+    </div>
+</div>
+
+<style>
+    .shortcuts-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 90;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1.5rem;
+    }
+    /* author display:flex 会压过 UA 的 [hidden] 规则，必须显式补回 */
+    .shortcuts-overlay[hidden] {
+        display: none;
+    }
+    .shortcuts-backdrop {
+        position: absolute;
+        inset: 0;
+        background: color-mix(in oklab, var(--page-bg) 55%, black 30%);
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
+        animation: shortcuts-fade 0.3s var(--ease-out-expo) both;
+    }
+    .shortcuts-card {
+        position: relative;
+        width: min(26rem, 100%);
+        border-radius: var(--radius-large);
+        padding: 1.5rem 1.6rem 1.2rem;
+        background: color-mix(in oklab, var(--float-panel-bg) 88%, transparent);
+        backdrop-filter: blur(18px) saturate(1.4);
+        -webkit-backdrop-filter: blur(18px) saturate(1.4);
+        box-shadow: 0 24px 70px rgb(0 0 0 / 0.35);
+        animation: shortcuts-rise 0.4s var(--ease-out-expo) both;
+    }
+    .shortcuts-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1.1rem;
+    }
+    .shortcuts-title {
+        font-family: var(--font-display);
+        font-size: 1.05rem;
+        font-weight: 560;
+        letter-spacing: 0.06em;
+        color: rgb(0 0 0 / 0.85);
+    }
+    :global(:root.dark) .shortcuts-title {
+        color: rgb(255 255 255 / 0.88);
+    }
+    .shortcuts-close {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 1.9rem;
+        height: 1.9rem;
+        border-radius: 0.5rem;
+        font-size: 0.8rem;
+        color: rgb(0 0 0 / 0.5);
+        transition: background 0.25s ease, color 0.25s ease;
+        cursor: pointer;
+    }
+    :global(:root.dark) .shortcuts-close {
+        color: rgb(255 255 255 / 0.5);
+    }
+    @media (hover: hover) {
+        .shortcuts-close:hover {
+            background: var(--btn-plain-bg-hover);
+            color: var(--primary);
+        }
+    }
+    .shortcuts-list {
+        display: flex;
+        flex-direction: column;
+        list-style: none;
+        margin: 0;
+        padding: 0;
+    }
+    .shortcuts-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 0.55rem 0;
+        border-top: 1px dashed var(--line-divider);
+    }
+    .shortcuts-row:first-child {
+        border-top: none;
+    }
+    .shortcuts-keys {
+        display: inline-flex;
+        gap: 0.35rem;
+    }
+    .shortcuts-kbd {
+        min-width: 1.7rem;
+        padding: 0.18rem 0.45rem;
+        border-radius: 0.4rem;
+        border: 1px solid var(--line-color);
+        border-bottom-width: 2px;
+        background: var(--btn-regular-bg);
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 0.78rem;
+        text-align: center;
+        color: var(--btn-content);
+    }
+    .shortcuts-label {
+        font-size: 0.86rem;
+        color: rgb(0 0 0 / 0.62);
+        text-align: right;
+    }
+    :global(:root.dark) .shortcuts-label {
+        color: rgb(255 255 255 / 0.62);
+    }
+    .shortcuts-foot {
+        margin-top: 1rem;
+        font-size: 0.68rem;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: rgb(0 0 0 / 0.35);
+    }
+    :global(:root.dark) .shortcuts-foot {
+        color: rgb(255 255 255 / 0.35);
+    }
+    @keyframes shortcuts-fade {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    @keyframes shortcuts-rise {
+        from { opacity: 0; transform: translateY(14px) scale(0.97); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+</style>
+
+<script>
+    // Singleton: Layout includes this once, Swup never swaps it.
+    if (!(window as any).__shortcutsHelp) {
+        (window as any).__shortcutsHelp = true;
+
+        const overlay = () => document.getElementById("shortcuts-overlay");
+        let returnFocus: HTMLElement | null = null;
+
+        const isOpen = () => {
+            const el = overlay();
+            return el && !el.hidden;
+        };
+        const open = () => {
+            const el = overlay();
+            if (!el || !el.hidden) return;
+            returnFocus = document.activeElement as HTMLElement | null;
+            el.hidden = false;
+            el.querySelector<HTMLElement>(".shortcuts-close")?.focus();
+        };
+        const close = () => {
+            const el = overlay();
+            if (!el || el.hidden) return;
+            el.hidden = true;
+            returnFocus?.focus?.();
+            returnFocus = null;
+        };
+        const toggle = () => (isOpen() ? close() : open());
+
+        const typingTarget = (t: EventTarget | null) => {
+            const el = t as HTMLElement | null;
+            return (
+                el &&
+                (el.tagName === "INPUT" ||
+                    el.tagName === "TEXTAREA" ||
+                    el.isContentEditable)
+            );
+        };
+
+        document.addEventListener("keydown", (e) => {
+            if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey || e.isComposing)
+                return;
+            if (e.key === "Escape" && isOpen()) {
+                e.preventDefault();
+                close();
+                return;
+            }
+            if (e.key === "?" && !typingTarget(e.target)) {
+                e.preventDefault();
+                toggle();
+            }
+        });
+
+        // delegated: survives any DOM order; footer trigger + backdrop + close btn
+        document.addEventListener("click", (e) => {
+            const t = e.target as HTMLElement;
+            if (t.closest("#shortcuts-trigger")) {
+                open();
+                return;
+            }
+            if (t.closest("[data-shortcuts-close]")) {
+                close();
+            }
+        });
+    }
+</script>

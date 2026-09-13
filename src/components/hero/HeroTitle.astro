@@ -1,0 +1,278 @@
+---
+/**
+ * HeroTitle — kinetic editorial typography layered over the hero canvas.
+ *
+ * Visible on the home page's extended banner (desktop, `lg:is-home`).
+ * Characters are split server-side so the reveal works without JS;
+ * a tiny script replays the stagger when Swup navigates back home.
+ */
+import { siteConfig } from "../../config";
+
+const chars = [...siteConfig.title];
+---
+
+<div id="hero-title" class="absolute inset-0 z-20 pointer-events-none select-none">
+    <div id="hero-title-inner" class="relative h-full max-w-[var(--page-width)] mx-auto px-4 md:px-8 flex flex-col justify-end pb-28">
+        <div class="hero-overline flex items-center gap-4 mb-5">
+            <svg class="hero-sigil" width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
+                <g stroke="currentColor" stroke-width="1.1" stroke-linecap="round">
+                    <line x1="7" y1="0.8" x2="7" y2="13.2"></line>
+                    <line x1="0.8" y1="7" x2="13.2" y2="7"></line>
+                    <line x1="2.6" y1="2.6" x2="11.4" y2="11.4"></line>
+                    <line x1="11.4" y1="2.6" x2="2.6" y2="11.4"></line>
+                </g>
+            </svg>
+            <span class="hero-rule inline-block h-px w-14 bg-current opacity-60"></span>
+            <span class="font-mono text-xs tracking-[0.35em] uppercase opacity-70">Personal Journal · 随笔手札</span>
+        </div>
+
+        <h1 class="hero-heading font-display" aria-label={siteConfig.title}>
+            {chars.map((ch, i) => (
+                <span class="char-mask" style={`--i:${i}`} aria-hidden="true">
+                    <span class="char-inner">{ch === " " ? " " : ch}</span>
+                </span>
+            ))}
+        </h1>
+
+        <p class="hero-sub mt-6 max-w-[34rem] text-base md:text-lg leading-relaxed opacity-0">
+            {siteConfig.subtitle}
+        </p>
+
+        <div class="hero-status mt-8 flex items-center gap-3 font-mono text-[0.65rem] tracking-[0.3em] uppercase opacity-0">
+            <span class="status-dot inline-block w-1.5 h-1.5 rounded-full bg-current"></span>
+            <span id="hero-clock">--:--:--</span>
+            <span class="opacity-50" id="hero-tz"></span>
+        </div>
+
+        <div class="hero-scroll-cue absolute right-8 bottom-28 flex flex-col items-center gap-3">
+            <span class="font-mono text-[0.65rem] tracking-[0.4em] uppercase opacity-60 [writing-mode:vertical-rl]">Scroll</span>
+            <span class="scroll-line block w-px h-16 overflow-hidden relative">
+                <span class="scroll-line-inner absolute inset-x-0 top-0 h-full bg-current"></span>
+            </span>
+        </div>
+    </div>
+</div>
+
+<style>
+    #hero-title {
+        opacity: 0;
+        visibility: hidden;
+        color: var(--hero-ink, rgba(0, 0, 0, 0.88));
+        transition:
+            opacity 0.6s var(--ease-in-out-luxe, ease),
+            visibility 0.6s;
+    }
+    :root.dark #hero-title {
+        color: var(--hero-ink, rgba(255, 255, 255, 0.92));
+    }
+
+    /* The extended banner (and therefore the hero title) is desktop-only */
+    @media (min-width: 1024px) {
+        body.lg\:is-home #hero-title {
+            opacity: 1;
+            visibility: visible;
+        }
+    }
+
+    /* Mobile: a quiet static inscription over the banner — same voice,
+       no choreography (the banner is short and the GPU is busy). */
+    @media (max-width: 1023px) {
+        body.lg\:is-home #hero-title {
+            opacity: 1;
+            visibility: visible;
+        }
+        #hero-title-inner {
+            padding-bottom: 3.25rem;
+        }
+        .font-display {
+            font-size: clamp(1.9rem, 8.5vw, 2.6rem);
+        }
+        .char-inner {
+            transform: none;
+            animation: none;
+        }
+        .hero-overline,
+        .hero-sub {
+            opacity: 1;
+            transform: none;
+        }
+        .hero-overline {
+            margin-bottom: 0.75rem;
+        }
+        .hero-overline .font-mono {
+            font-size: 0.6rem;
+            letter-spacing: 0.25em;
+        }
+        .hero-sub {
+            margin-top: 0.9rem;
+            font-size: 0.9rem;
+        }
+        .hero-status,
+        .hero-scroll-cue {
+            display: none;
+        }
+    }
+
+    .font-display {
+        font-family: var(--font-display);
+        font-size: var(--text-hero);
+        line-height: 1.04;
+        font-weight: 560;
+        letter-spacing: 0.01em;
+        text-shadow: 0 0.05em 0.6em color-mix(in oklab, var(--page-bg) 55%, transparent);
+    }
+
+    .char-mask {
+        display: inline-block;
+        overflow: hidden;
+        vertical-align: bottom;
+        padding-bottom: 0.08em;
+        margin-bottom: -0.08em;
+    }
+    .char-inner {
+        display: inline-block;
+        transform: translateY(115%) rotate(6deg);
+        transform-origin: 0 100%;
+    }
+    .hero-overline,
+    .hero-sub,
+    .hero-status,
+    .hero-scroll-cue {
+        opacity: 0;
+        transform: translateY(1.25rem);
+    }
+
+    .hero-sigil {
+        opacity: 0.75;
+        animation: sigil-spin 14s linear infinite;
+        transform-origin: 50% 50%;
+    }
+    @keyframes sigil-spin {
+        to { transform: rotate(360deg); }
+    }
+
+    .status-dot {
+        animation: status-pulse 2.4s var(--ease-in-out-luxe, ease-in-out) infinite;
+    }
+    @keyframes status-pulse {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.35; transform: scale(0.72); }
+    }
+    #hero-clock {
+        font-variant-numeric: tabular-nums;
+    }
+
+    /* Reveal choreography — only plays while the hero is on stage */
+    @media (min-width: 1024px) {
+        body.lg\:is-home #hero-title.hero-play .char-inner {
+            animation: char-rise 1s var(--ease-out-expo) both;
+            animation-delay: calc(0.25s + var(--i) * 65ms);
+        }
+        body.lg\:is-home #hero-title.hero-play .hero-overline {
+            animation: fade-slide 0.9s var(--ease-out-expo) 0.1s both;
+        }
+        body.lg\:is-home #hero-title.hero-play .hero-sub {
+            animation: fade-slide 1s var(--ease-out-expo) calc(0.35s + 0.65s) both;
+        }
+        body.lg\:is-home #hero-title.hero-play .hero-status {
+            animation: fade-slide 1s var(--ease-out-expo) 1.9s both;
+        }
+        body.lg\:is-home #hero-title.hero-play .hero-scroll-cue {
+            animation: fade-slide 1s var(--ease-out-expo) 1.6s both;
+        }
+        body.lg\:is-home #hero-title .scroll-line-inner {
+            animation: scroll-cue 2.2s var(--ease-in-out-luxe) infinite;
+        }
+    }
+
+    @keyframes char-rise {
+        from { transform: translateY(115%) rotate(6deg); }
+        to { transform: translateY(0) rotate(0deg); }
+    }
+    @keyframes fade-slide {
+        from { opacity: 0; transform: translateY(1.25rem); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes scroll-cue {
+        0% { transform: translateY(-100%); }
+        55% { transform: translateY(0); }
+        100% { transform: translateY(102%); }
+    }
+
+    html.reduced-motion .char-inner,
+    html.reduced-motion .hero-overline,
+    html.reduced-motion .hero-sub,
+    html.reduced-motion .hero-status,
+    html.reduced-motion .hero-scroll-cue {
+        animation: none !important;
+        transform: none;
+        opacity: 1;
+    }
+    html.reduced-motion .hero-sigil,
+    html.reduced-motion .status-dot {
+        animation: none !important;
+    }
+</style>
+
+<script>
+import { isTouch, motionOK, onPageView } from "../../utils/motion";
+
+const replay = () => {
+    const el = document.getElementById("hero-title");
+    if (!el) return;
+    el.classList.remove("hero-play");
+    // force reflow so the CSS animations restart
+    void el.offsetWidth;
+    el.classList.add("hero-play");
+};
+
+/* Pointer parallax: the whole inscription block drifts a few pixels
+   against the flow field beneath it — a third depth layer. The hero
+   lives outside the Swup containers, so one listener is enough.
+   gsap is imported dynamically so reduced-motion users and touch
+   devices never pay for the chunk. */
+if (motionOK() && !isTouch()) {
+    const inner = document.getElementById("hero-title-inner");
+    if (inner) {
+        import("gsap").then(({ default: gsap }) => {
+            const xTo = gsap.quickTo(inner, "x", {
+                duration: 1.2,
+                ease: "power3.out",
+            });
+            const yTo = gsap.quickTo(inner, "y", {
+                duration: 1.2,
+                ease: "power3.out",
+            });
+            window.addEventListener(
+                "pointermove",
+                (e) => {
+                    xTo((e.clientX / window.innerWidth - 0.5) * 18);
+                    yTo((e.clientY / window.innerHeight - 0.5) * 12);
+                },
+                { passive: true },
+            );
+        });
+    }
+}
+
+/* Live colophon: local time + UTC offset, ticking once per second.
+   The hero sits outside the Swup containers, so one interval is enough. */
+const clock = document.getElementById("hero-clock");
+const tz = document.getElementById("hero-tz");
+if (clock && tz) {
+    const pad = (n: number) => String(n).padStart(2, "0");
+    const offsetMin = -new Date().getTimezoneOffset();
+    const sign = offsetMin >= 0 ? "+" : "-";
+    const abs = Math.abs(offsetMin);
+    tz.textContent = `UTC${sign}${pad(Math.floor(abs / 60))}:${pad(abs % 60)}`;
+    const render = () => {
+        const d = new Date();
+        clock.textContent = `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+    };
+    render();
+    setInterval(render, 1000);
+}
+
+replay();
+onPageView(replay);
+</script>
