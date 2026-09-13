@@ -6,8 +6,8 @@ import { url } from "@utils/url-utils.ts";
 import { onMount } from "svelte";
 import { cubicOut } from "svelte/easing";
 import { fly } from "svelte/transition";
-import { thock, tick } from "@/utils/audio";
 import type { SearchResult } from "@/global";
+import { thock, tick } from "@/utils/audio";
 
 const reduceMotion =
 	typeof window !== "undefined" &&
@@ -99,6 +99,25 @@ const search = async (keyword: string, isDesktop: boolean): Promise<void> => {
 };
 
 onMount(() => {
+	/* Swup visits clear any open search state; the panel would otherwise
+	   stay open over the newly swapped page. */
+	const onReset = () => {
+		keywordDesktop = "";
+		keywordMobile = "";
+		result = [];
+		const panel = document.getElementById("search-panel");
+		panel?.classList.add("float-panel-closed");
+		const active = document.activeElement;
+		if (
+			active instanceof HTMLInputElement &&
+			(active.id === "search-input-desktop" ||
+				active.id === "search-input-mobile")
+		) {
+			active.blur();
+		}
+	};
+	window.addEventListener("search:reset", onReset);
+
 	/* Keyboard wayfinding: "/" focuses the search field from anywhere,
 	   Escape closes the panel — mirrored from pro tooling conventions. */
 	const onKeydown = (e: KeyboardEvent) => {
@@ -174,6 +193,7 @@ onMount(() => {
 
 	return () => {
 		window.removeEventListener("keydown", onKeydown);
+		window.removeEventListener("search:reset", onReset);
 	};
 });
 
