@@ -11,6 +11,6 @@ const sortedPostsList = await getSortedPostsList();
 <MainGridLayout title={i18n(I18nKey.archive)}>
     <h1 class="sr-only">{i18n(I18nKey.archive)}</h1>
     <div data-reveal>
-        <ArchivePanel tags={[]} categories={[]} sortedPosts={sortedPostsList} client:idle></ArchivePanel>
+        <ArchivePanel tags={[]} categories={[]} sortedPosts={sortedPostsList} client:load></ArchivePanel>
     </div>
 </MainGridLayout>

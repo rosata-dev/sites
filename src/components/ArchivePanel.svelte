@@ -1,6 +1,4 @@
 <script lang="ts">
-import { onMount } from "svelte";
-
 import I18nKey from "../i18n/i18nKey";
 import { i18n } from "../i18n/translation";
 import { getPostUrlBySlug, url } from "../utils/url-utils";
@@ -10,23 +8,24 @@ export let categories: string[] = [];
 export let sortedPosts: Post[] = [];
 
 // The SSR pass renders the full, unfiltered list so the archive works
-// without JS; URL query filters snap in after hydration.
-let uncategorized: string | null = null;
-
-onMount(() => {
-	const params = new URLSearchParams(window.location.search);
+// without JS; the URL query filters are applied at instance init so the
+// very first hydrated render is already the filtered view.
+const params =
+	typeof window !== "undefined"
+		? new URLSearchParams(window.location.search)
+		: null;
+if (params) {
 	tags = params.getAll("tag");
 	categories = params.getAll("category");
-	uncategorized = params.get("uncategorized");
-});
+}
+let uncategorized: string | null = params?.get("uncategorized") ?? null;
 
 $: isFiltered = tags.length > 0 || categories.length > 0 || !!uncategorized;
 $: filterLabel = uncategorized
 	? i18n(I18nKey.uncategorized)
-	: [
-			...categories.map((c) => `${c}`),
-			...tags.map((t) => `#${t}`),
-		].join("  ·  ");
+	: [...categories.map((c) => `${c}`), ...tags.map((t) => `#${t}`)].join(
+			"  ·  ",
+		);
 
 interface Post {
 	slug: string;
@@ -59,7 +58,8 @@ function buildGroups(
 	}
 	if (selCategories.length > 0) {
 		filtered = filtered.filter(
-			(post) => post.data.category && selCategories.includes(post.data.category),
+			(post) =>
+				post.data.category && selCategories.includes(post.data.category),
 		);
 	}
 	if (selUncategorized) {
