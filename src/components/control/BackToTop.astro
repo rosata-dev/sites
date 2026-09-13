@@ -4,12 +4,12 @@ import { Icon } from "astro-icon/components";
 
 <!-- There can't be a filter on parent element, or it will break `fixed` -->
 <div class="back-to-top-wrapper hidden lg:block">
-    <div id="back-to-top-btn" class="back-to-top-btn hide flex items-center rounded-2xl transition">
+    <div id="back-to-top-btn" class="back-to-top-btn hide flex items-center rounded-full transition">
         <svg class="progress-ring" viewBox="0 0 64 64" aria-hidden="true">
             <circle class="progress-ring-track" cx="32" cy="32" r="28" pathLength="100"></circle>
             <circle id="progress-ring-bar" class="progress-ring-bar" cx="32" cy="32" r="28" pathLength="100"></circle>
         </svg>
-        <button aria-label="Back to Top" class="btn-card h-[3.75rem] w-[3.75rem] rounded-2xl">
+        <button aria-label="Back to Top" class="btn-card h-[3.75rem] w-[3.75rem] rounded-full">
             <Icon name="material-symbols:keyboard-arrow-up-rounded" class="mx-auto"></Icon>
         </button>
     </div>
