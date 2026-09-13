@@ -8,6 +8,7 @@
 
 - 站点域名：`https://rosata.cn`
 - `www` 域名：`https://www.rosata.cn`
+- 源码仓库：`https://github.com/Rosatus/rosata-blog`（私有仓库，`main` 分支，2026-09-13 建仓并推送；本地提交后通过 `git push` 同步）
 - 首页路径：`/`
 - 文章路径：`/posts/<slug>/`
 - 归档路径：`/archive/`
@@ -83,9 +84,9 @@
 │   │   ├── robots.txt.ts
 │   │   └── rss.xml.ts
 │   ├── plugins/           # remark/rehype/expressive-code 插件
-│   ├── styles/
+│   ├── styles/            # 含 transition.css、motion.css 等
 │   ├── types/
-│   └── utils/             # 含 og-image.ts、motion.ts、effects.ts、audio.ts 等
+│   └── utils/             # 含 og-image.ts、motion.ts、effects.ts、audio.ts、ascii-transition.ts、shuffle-text.ts 等
 ├── package.json
 ├── pnpm-lock.yaml
 └── tsconfig.json
@@ -305,6 +306,12 @@ rsync -az --delete -e "ssh -p 42960 -o ConnectTimeout=10" "dist/" root@150.158.1
 ```
 
 `rsync --delete` 会删除远程 `/var/www/rosata_blog/` 中本地 `dist/` 不存在的文件。只对站点静态目录使用，不要把目标路径改成 `/var/www/` 或更高层目录。
+
+SSH 认证说明：服务器只接受公钥登录。本机私钥已加入 Windows 侧 OpenSSH 的 `ssh-agent`；WSL 侧自己的 `ssh-agent` 可能没有加载私钥（表现为 `Permission denied (publickey)`）。在 WSL 中执行部署时，用 Windows 的 `ssh.exe` 作为 rsync 传输层即可：
+
+```bash
+rsync -az --delete -e "/mnt/c/Windows/System32/OpenSSH/ssh.exe -p 42960 -o ConnectTimeout=10" "dist/" root@150.158.127.29:/var/www/rosata_blog/
+```
 
 部署后验证：
 
