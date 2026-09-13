@@ -36,6 +36,9 @@ function syncLenis() {
  * Must be called inside a gsap.context callback so tweens are recorded.
  */
 function setupReveals() {
+	/* Swup-swapped pages render settled (see transition.css .swup-swapped):
+	   rising cards under the ASCII sweep read as a bounce after the wipe. */
+	if (document.documentElement.classList.contains("swup-swapped")) return;
 	const targets = gsap.utils.toArray<HTMLElement>("[data-reveal]");
 	// blur is a GPU-heavy filter; touch devices get a lighter rise-only reveal
 	const blur = isTouch() ? "blur(0px)" : "blur(6px)";

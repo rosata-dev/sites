@@ -482,6 +482,12 @@ const setup = () => {
 		// reset the search UI so an open panel + keyword never linger over the next page
 		window.dispatchEvent(new CustomEvent('search:reset'))
 
+		// swapped-in pages render in their final state: the ASCII sweep is the
+		// transition, replaying entrance/reveal animations underneath it reads
+		// as blocks jumping after the wipe passes. Set before content:replace
+		// so the fresh DOM never starts those animations.
+		document.documentElement.classList.add('swup-swapped')
+
 		// change banner height immediately when a link is clicked
 		const bodyElement = document.querySelector('body')
 		if (pathsEqual(visit.to.url, url('/'))) {

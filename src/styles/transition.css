@@ -75,3 +75,29 @@ html.is-animating .transition-swup-fade {
 #post-container :nth-child(5) { animation-delay: calc(var(--content-delay) + 250ms) }
 #post-container :nth-child(6) { animation-delay: calc(var(--content-delay) + 325ms) }
 
+/* Pages arriving via a Swup swap skip entrance/reveal motion entirely:
+   the ASCII sweep + shuffle decode already is the transition, and any
+   fade-in-up still running when the wipe passes reads as blocks dropping
+   then bouncing back. The class is set on the first visit:start and kept
+   for the session; the initial full load keeps its entrance animations.
+   GSAP reveals are additionally skipped in effects.ts (inline styles would
+   otherwise win over these rules). */
+html.swup-swapped .onload-animation {
+    animation: none;
+    opacity: 1;
+}
+html.swup-swapped [data-reveal] {
+    opacity: 1 !important;
+}
+/* The home↔non-home banner geometry (banner wrapper translate, main-grid
+   offset) otherwise tweens over 700ms while the sweep is revealing the new
+   page, so content ahead of the wipe edge visibly drifts upward. Swapped-in
+   states snap instantly instead; the initial load is untouched because the
+   class only appears on the first visit:start. #navbar-wrapper is excluded —
+   its transition drives the scroll hide/show, which must stay smooth. */
+html.swup-swapped #main-grid,
+html.swup-swapped #banner-wrapper,
+html.swup-swapped #banner {
+    transition: none;
+}
+
