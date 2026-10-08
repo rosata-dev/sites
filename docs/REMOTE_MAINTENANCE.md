@@ -4,7 +4,7 @@
 
 不要在本文档或仓库中写入服务器密码、私钥、token 或其他明文凭据。当前维护方式默认使用本机已经加入 `ssh-agent` 的私钥登录。
 
-> **架构变更说明（2026-02）**：本仓库已重构为 pnpm workspace monorepo。共享主题位于 `packages/theme`（`@rosata/theme`），rosata.cn 站点代码、内容和资产位于 `apps/rosata-cn`，另有 `apps/obsidian-kb`（ob.rosata.cn）。本文档中的历史路径按以下规则对应：
+> **架构变更说明（2026-02）**：本仓库已重构为 pnpm workspace monorepo。共享主题位于 `packages/theme`（`@rosata/theme`），rosata.cn 站点代码、内容和资产位于 `apps/rosata-cn`，另有 `apps/obsidian-kb` 作为新建站点的模板示例（不部署）。本文档中的历史路径按以下规则对应：
 >
 > - `src/` → `apps/rosata-cn/src/`
 > - `public/` → `apps/rosata-cn/public/`
@@ -56,7 +56,7 @@
 │   │       ├── config.ts    # 站点配置（标题、副标题、备案号等）
 │   │       ├── content/     # posts/（5 篇文章）+ spec/about.md + config.ts
 │   │       └── pages/       # 薄壳路由，实现位于 @rosata/theme
-│   └── obsidian-kb/         # ob.rosata.cn 数字花园，同构
+│   └── obsidian-kb/         # 模板示例站，同构（不部署）
 ├── packages/
 │   └── theme/               # @rosata/theme 共享主题内核
 │       ├── astro.config.mjs # createSiteConfig() 工厂

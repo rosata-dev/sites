@@ -1,5 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="我的生活随笔手札">
-  <rect width="64" height="64" rx="14" fill="#151713"/>
-  <path d="M18 20h28v5H34v6h10v5H34v8h13v5H17v-5h12v-8h-9v-5h9v-6H18v-5Z" fill="#f7f7f2"/>
-  <circle cx="48" cy="17" r="4" fill="#0f766e"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Site">
+  <rect width="64" height="64" rx="14" fill="#171b21"/>
+  <circle cx="32" cy="32" r="14" fill="#edf1f4"/>
+  <circle cx="32" cy="32" r="7" fill="#171b21"/>
 </svg>

@@ -7,7 +7,7 @@
 | 站点 | 目录 | 域名 | 说明 |
 |---|---|---|---|
 | rosata-cn | `apps/rosata-cn` | <https://rosata.cn> | 生活随笔手札 |
-| obsidian-kb | `apps/obsidian-kb` | <https://ob.rosata.cn> | Obsidian 数字花园 / 知识库 |
+| obsidian-kb | `apps/obsidian-kb` | — | 模板示例站：新建站点时复制本目录改造 |
 
 ## 仓库结构
 
@@ -15,7 +15,7 @@
 .
 ├── apps/
 │   ├── rosata-cn/           # 站 A：独立 config、文章、资产、页面路由
-│   └── obsidian-kb/         # 站 B：同构，独立 config、内容目录
+│   └── obsidian-kb/         # 模板示例站：占位配置/资产，新建站点复制改造
 ├── packages/
 │   └── theme/               # @rosata/theme：共享 Fuwari 衍生主题内核
 │                            # （components / layouts / pages 实现 / plugins /
@@ -95,10 +95,13 @@ draft: false
 
 ## 新增一个站点
 
-1. 复制 `apps/obsidian-kb` 为 `apps/<新站点>`。
-2. 修改 `astro.config.mjs` 中的 `site` 域名与 `src/config.ts` 站点信息。
-3. `pnpm-workspace.yaml` 已匹配 `apps/*`，无需修改；`pnpm install` 后即可 `dev`/`build`。
-4. 备案信息按站点实际填写，不得复用其他站点的备案号。
+`apps/obsidian-kb` 是模板示例站——配置项均带 `TODO` 注释、资产为通用占位图、内容目录为空：
+
+1. `cp -r apps/obsidian-kb apps/<新站点>`，并把 `package.json` 的 `name` 改为新站点名。
+2. 修改 `astro.config.mjs` 中的 `site` 域名，逐项替换 `src/config.ts` 里的 `TODO` 字段。
+3. 替换 `public/` 下的占位资产（横幅、头像、favicon、manifest 站点名）。
+4. `pnpm-workspace.yaml` 已匹配 `apps/*`，无需修改；`pnpm install` 后即可 `dev`/`build`。
+5. 备案信息按站点实际填写，不得复用其他站点的备案号。
 
 ## 站点信息（rosata-cn）
 
