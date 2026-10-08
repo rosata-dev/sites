@@ -4,6 +4,10 @@
  *
  * Desktop: raw WebGL2 fullscreen fragment shader (domain-warped fbm flow
  * field with chromatic dispersion), tinted by the site's hue token.
+ * The cursor doubles as a gravity well: dwelling in the banner charges
+ * it and the field itself swirls into a whirlpool around the cursor —
+ * capture radius and pull grow with the accumulated charge; a fast
+ * flick discharges the held mass back into the field.
  * Touch:   Canvas2D particle flow field with Verlet integration.
  * The static banner image stays underneath as LCP poster and as the
  * no-WebGL / reduced-motion fallback.
@@ -48,6 +52,7 @@
 </style>
 
 <script>
+import { sweep } from "../../utils/audio";
 import { isTouch, reducedMotion } from "../../utils/motion";
 
 const VERT = `#version 300 es
@@ -60,8 +65,9 @@ precision highp float;
 
 uniform vec2  u_res;
 uniform float u_time;
-uniform vec2  u_mouse;   // -1..1, lerped
+uniform vec2  u_mouse;   // cursor pos in canvas-uv space, lerped
 uniform float u_vel;     // smoothed pointer speed 0..~1.5
+uniform float u_well;    // gravity-well charge 0..1 (held-field fraction)
 uniform float u_hue;     // 0..1
 uniform float u_dark;    // 0..1
 uniform float u_fade;    // intro fade 0..1
@@ -107,13 +113,27 @@ vec3 pal(float t, float h) {
 void main() {
     vec2 uv = (gl_FragCoord.xy * 2.0 - u_res) / min(u_res.x, u_res.y);
     float t = u_time * 0.028;
-    vec2 m = u_mouse * 0.35;
+    vec2 wc = u_mouse;                   // well centre = exact cursor
 
     // slow breathing of the whole field
     uv *= 1.0 + 0.035 * sin(u_time * 0.07);
 
-    // pointer speed stirs the liquid: fast cursor = stronger warp
-    float stir = clamp(u_vel, 0.0, 1.5);
+    // pointer speed stirs the liquid: fast cursor = stronger warp;
+    // a charged gravity well stirs it just the same
+    float stir = clamp(u_vel + u_well * 0.9, 0.0, 1.5);
+
+    // gravity well: a charged cursor swallows the field itself. The
+    // capture radius grows with charge, so the held mass (~wr²) does
+    // too — the positive feedback the game loop runs on. Held matter
+    // keeps orbiting: the twist angle advances with u_time.
+    vec2 uv0 = uv;                       // unwarped, cursor-centric terms
+    float wr = 0.3 + 0.6 * u_well;
+    vec2 toM = uv0 - wc;
+    float cap = u_well * exp(-dot(toM, toM) / (wr * wr));
+    float tw = cap * (1.7 + 0.55 * u_time * u_well);
+    float cs = cos(tw);
+    float sn = sin(tw);
+    uv = wc + mat2(cs, -sn, sn, cs) * (toM * (1.0 - 0.55 * cap));
 
     // water character: low frequency, broad forms — a calm deep lake,
     // not a stream. gentle directional current advects the whole field.
@@ -126,13 +146,13 @@ void main() {
         fbm(fuv + vec2(5.2, 1.3) - t)
     );
     vec2 r = vec2(
-        fbm(fuv + (1.4 + 0.5 * stir) * q + vec2(1.7, 9.2) + m + 0.15 * t),
-        fbm(fuv + (1.4 + 0.5 * stir) * q + vec2(8.3, 2.8) - m - 0.12 * t)
+        fbm(fuv + (1.4 + 0.5 * stir) * q + vec2(1.7, 9.2) + wc * 0.35 + 0.15 * t),
+        fbm(fuv + (1.4 + 0.5 * stir) * q + vec2(8.3, 2.8) - wc * 0.35 - 0.12 * t)
     );
     float f = fbm(fuv + (1.6 + 0.4 * stir) * r);
 
     // chromatic dispersion: barely-there, only near a fast cursor
-    float dispersion = 0.006 + 0.04 * exp(-1.8 * length(uv - m * 1.4)) + 0.02 * stir;
+    float dispersion = 0.006 + 0.04 * exp(-1.8 * length(uv0 - wc)) + 0.02 * stir;
     float fR = fbm(fuv + 1.6 * r + vec2(dispersion, 0.0));
     float fB = fbm(fuv + 1.6 * r - vec2(dispersion, 0.0));
     vec3 col = vec3(
@@ -145,9 +165,9 @@ void main() {
     float ridge = pow(clamp(1.0 - abs(f * 2.0 - 1.0), 0.0, 1.0), 4.0);
     col += ridge * (0.1 + 0.07 * stir) * pal(f + 0.5, fract(u_hue + 0.08));
 
-    // soft glow following the cursor
-    float glow = exp(-2.2 * length(uv - m * 1.4));
-    col += glow * 0.12 * pal(f + 0.25, u_hue);
+    // soft glow following the cursor — brightens as the well charges
+    float glow = exp(-2.2 * length(uv0 - wc));
+    col += glow * (0.12 + 0.26 * u_well) * pal(f + 0.25, u_hue);
 
     // theme adaptation — low contrast, the field stays a whisper
     vec3 darkBase = vec3(0.055, 0.055, 0.075);
@@ -158,8 +178,8 @@ void main() {
         u_dark
     );
 
-    // vignette
-    themed *= 1.0 - 0.35 * smoothstep(0.55, 1.6, length(uv));
+    // vignette (unwarped frame, so the well can't distort the border)
+    themed *= 1.0 - 0.35 * smoothstep(0.55, 1.6, length(uv0));
 
     // dithering to kill banding
     themed += (hash(gl_FragCoord.xy + u_time) - 0.5) * 0.015;
@@ -442,6 +462,7 @@ function createHeroGL(canvas: HTMLCanvasElement): HeroGL | null {
         time: gl.getUniformLocation(prog, "u_time"),
         mouse: gl.getUniformLocation(prog, "u_mouse"),
         vel: gl.getUniformLocation(prog, "u_vel"),
+        well: gl.getUniformLocation(prog, "u_well"),
         hue: gl.getUniformLocation(prog, "u_hue"),
         dark: gl.getUniformLocation(prog, "u_dark"),
         fade: gl.getUniformLocation(prog, "u_fade"),
@@ -513,20 +534,49 @@ function createHeroGL(canvas: HTMLCanvasElement): HeroGL | null {
     let vel = 0;
     let lastPX = 0;
     let lastPY = 0;
+    // gravity-well charge: dwelling inside the banner band "drinks"
+    // the field (charge → 1); a fast flick discharges the held mass
+    let charge = 0;
+    let inside = false;
+    let lastClientY = -9999;
+    let releaseT = 0;
+    const FLICK = 0.8;
     const onPointerMove = (e: PointerEvent) => {
-        const nx = (e.clientX / window.innerWidth) * 2 - 1;
-        const ny = -((e.clientY / window.innerHeight) * 2 - 1);
+        // cursor position in the shader's uv space (canvas px → min-dim
+        // normalised) — the well sits exactly under the pointer
+        const rect = canvas.getBoundingClientRect();
+        const px = ((e.clientX - rect.left) / rect.width) * canvas.width;
+        const py = ((e.clientY - rect.top) / rect.height) * canvas.height;
+        const mn = Math.min(canvas.width, canvas.height);
+        const nx = (px * 2 - canvas.width) / mn;
+        const ny = -((py * 2 - canvas.height) / mn);
         const jump = Math.hypot(nx - lastPX, ny - lastPY);
         vel = Math.min(1.5, vel + jump * 1.4);
         lastPX = nx;
         lastPY = ny;
         tx = nx;
         ty = ny;
+        inside =
+            e.clientY >= rect.top - 40 && e.clientY <= rect.bottom + 40;
+        lastClientY = e.clientY;
+    };
+    const onPointerOut = (e: PointerEvent) => {
+        if (!e.relatedTarget) inside = false;
+    };
+    // scrolling slides the banner under a parked cursor
+    const onScroll = () => {
+        if (lastClientY < -999) return;
+        const rect = canvas.getBoundingClientRect();
+        inside =
+            lastClientY >= rect.top - 40 &&
+            lastClientY <= rect.bottom + 40;
     };
     if (!touch) {
         window.addEventListener("pointermove", onPointerMove, {
             passive: true,
         });
+        window.addEventListener("pointerout", onPointerOut);
+        window.addEventListener("scroll", onScroll, { passive: true });
     }
 
     /* --- render loop with pause conditions --- */
@@ -564,10 +614,26 @@ function createHeroGL(canvas: HTMLCanvasElement): HeroGL | null {
         vel *= 0.94; // friction: the stir settles back to calm
         fade = Math.min(1, fade + dt / 1800);
 
+        // charge dynamics — the game verb pair: dwell to gather,
+        // flick to throw. Held mass ∝ charge (capture radius ~wr²
+        // grows with it in the shader)
+        releaseT = Math.max(0, releaseT - dt);
+        if (releaseT === 0 && inside && charge > 0.08 && vel > FLICK) {
+            releaseT = 420;
+            charge *= 0.18; // the throw dumps most of the held field
+            sweep();
+        }
+        if (inside && releaseT === 0 && vel < 0.4) {
+            charge += (1 - charge) * Math.min(1, dt / 2400);
+        } else if (!inside) {
+            charge += (0 - charge) * Math.min(1, dt / 2600);
+        }
+
         gl.uniform2f(U.res, canvas.width, canvas.height);
         gl.uniform1f(U.time, (now - start) / 1000);
         gl.uniform2f(U.mouse, mx, my);
         gl.uniform1f(U.vel, vel);
+        gl.uniform1f(U.well, charge);
         gl.uniform1f(U.hue, ((hue % 360) + 360) % 360 / 360);
         gl.uniform1f(U.dark, dark);
         gl.uniform1f(U.fade, fade);
@@ -617,6 +683,8 @@ function createHeroGL(canvas: HTMLCanvasElement): HeroGL | null {
             document.removeEventListener("visibilitychange", onVisibility);
             if (!touch) {
                 window.removeEventListener("pointermove", onPointerMove);
+                window.removeEventListener("pointerout", onPointerOut);
+                window.removeEventListener("scroll", onScroll);
             }
             canvas.removeEventListener("webglcontextlost", onLost);
             canvas.removeEventListener("webglcontextrestored", onRestored);
