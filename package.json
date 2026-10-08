@@ -5,10 +5,10 @@
 	"private": true,
 	"scripts": {
 		"dev": "pnpm --filter rosata-cn dev",
-		"dev:kb": "pnpm --filter obsidian-kb dev",
+		"dev:template": "pnpm --filter site-template dev",
 		"build": "pnpm -r build",
 		"build:rosata-cn": "pnpm --filter rosata-cn build",
-		"build:kb": "pnpm --filter obsidian-kb build",
+		"build:template": "pnpm --filter site-template build",
 		"check": "pnpm -r check",
 		"preview": "pnpm --filter rosata-cn preview",
 		"new-post": "node scripts/new-post.js",
