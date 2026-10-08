@@ -1,0 +1,7 @@
+---
+import Page from "@rosata/theme/pages/posts/[...slug].astro";
+
+export { getStaticPaths } from "@rosata/theme/pages/posts/[...slug].astro";
+---
+
+<Page {...Astro.props} />

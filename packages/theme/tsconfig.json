@@ -1,0 +1,12 @@
+{
+	"extends": "astro/tsconfigs/strict",
+	"compilerOptions": {
+		"baseUrl": ".",
+		"strictNullChecks": true,
+		"allowJs": false,
+		"paths": {
+			"@site/config": ["./stubs/site-config.d.ts"]
+		}
+	},
+	"include": ["src/**/*", "stubs/**/*", "astro.config.mjs"]
+}

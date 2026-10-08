@@ -4,11 +4,21 @@
 
 不要在本文档或仓库中写入服务器密码、私钥、token 或其他明文凭据。当前维护方式默认使用本机已经加入 `ssh-agent` 的私钥登录。
 
+> **架构变更说明（2026-02）**：本仓库已重构为 pnpm workspace monorepo。共享主题位于 `packages/theme`（`@rosata/theme`），rosata.cn 站点代码、内容和资产位于 `apps/rosata-cn`，另有 `apps/obsidian-kb`（ob.rosata.cn）。本文档中的历史路径按以下规则对应：
+>
+> - `src/` → `apps/rosata-cn/src/`
+> - `public/` → `apps/rosata-cn/public/`
+> - `dist/` → `apps/rosata-cn/dist/`
+> - `deploy/` → `apps/rosata-cn/deploy/`
+> - `src/components`、`src/utils` 等主题代码 → `packages/theme/src/`
+>
+> 站点特定构建请使用 `corepack pnpm --filter rosata-cn build`；根目录 `corepack pnpm build` 会构建全部站点。
+
 ## 1. 当前状态
 
 - 站点域名：`https://rosata.cn`
 - `www` 域名：`https://www.rosata.cn`
-- 源码仓库：`https://github.com/Rosatus/rosata-blog`（私有仓库，`main` 分支，2026-09-13 建仓并推送；本地提交后通过 `git push` 同步）
+- 源码仓库：`https://github.com/rosata-dev/sites`（私有仓库，`main` 分支；本地提交后通过 `git push` 同步）
 - 首页路径：`/`
 - 文章路径：`/posts/<slug>/`
 - 归档路径：`/archive/`
@@ -37,80 +47,49 @@
 
 ```text
 .
-├── astro.config.mjs
-├── deploy/
-│   └── nginx/
-│       ├── rosata.cn.conf
-│       └── rosata-security-headers.conf
+├── apps/
+│   ├── rosata-cn/           # rosata.cn 站点
+│   │   ├── astro.config.mjs # site: "https://rosata.cn/"
+│   │   ├── deploy/nginx/    # 与服务器 live 配置同步的 Nginx 配置
+│   │   ├── public/          # banner、头像、备案图标、favicon、manifest
+│   │   └── src/
+│   │       ├── config.ts    # 站点配置（标题、副标题、备案号等）
+│   │       ├── content/     # posts/（5 篇文章）+ spec/about.md + config.ts
+│   │       └── pages/       # 薄壳路由，实现位于 @rosata/theme
+│   └── obsidian-kb/         # ob.rosata.cn 数字花园，同构
+├── packages/
+│   └── theme/               # @rosata/theme 共享主题内核
+│       ├── astro.config.mjs # createSiteConfig() 工厂
+│       └── src/             # components/ layouts/ pages/ utils/ styles/
+│                            # plugins/ i18n/ types/ constants/ content/
+├── scripts/
+│   └── new-post.js          # --app <name> 选择目标站点
 ├── docs/
 │   └── REMOTE_MAINTENANCE.md
-├── public/
-│   ├── assets/
-│   │   ├── post-cover.avif
-│   │   ├── post-cover.webp
-│   │   ├── profile-avatar.webp
-│   │   ├── public-security-badge.png
-│   │   ├── site-banner.avif
-│   │   └── site-banner.webp
-│   ├── favicon.svg
-│   ├── favicon/
-│   └── manifest.webmanifest
-├── scripts/
-│   └── new-post.js
-├── src/
-│   ├── components/        # Astro/Svelte 组件（含 hero、motion、widget、control 子目录）
-│   ├── config.ts
-│   ├── constants/
-│   ├── content/
-│   │   ├── config.ts
-│   │   ├── posts/
-│   │   │   ├── delayed-reply.md
-│   │   │   ├── morning-cup.md
-│   │   │   ├── old-street.md
-│   │   │   ├── quiet-room.md
-│   │   │   └── rain-at-window.md
-│   │   └── spec/
-│   │       └── about.md
-│   ├── i18n/
-│   ├── layouts/
-│   ├── pages/
-│   │   ├── [...page].astro
-│   │   ├── 404.astro
-│   │   ├── about.astro
-│   │   ├── archive.astro
-│   │   ├── og/            # 构建期生成的 OG 分享图端点（/og/<slug>.png）
-│   │   ├── posts/
-│   │   │   └── [...slug].astro
-│   │   ├── robots.txt.ts
-│   │   └── rss.xml.ts
-│   ├── plugins/           # remark/rehype/expressive-code 插件
-│   ├── styles/            # 含 transition.css、motion.css 等
-│   ├── types/
-│   └── utils/             # 含 og-image.ts、motion.ts、effects.ts、audio.ts、ascii-transition.ts、shuffle-text.ts 等
-├── package.json
-├── pnpm-lock.yaml
-└── tsconfig.json
+├── package.json             # 私有 workspace 根
+├── pnpm-workspace.yaml
+└── pnpm-lock.yaml
 ```
 
 关键文件说明：
 
-- `src/config.ts`：站点标题、语言、导航、个人卡片、页脚展示信息、主题色。
-- `src/content/posts/*.md`：博客文章，每篇文章使用 Markdown frontmatter。
-- `src/content/spec/about.md`：关于页正文。
-- `src/content/config.ts`：Astro 内容集合 schema。
-- `src/components/Footer.astro`：页脚、ICP 号和公安联网信息预留展示逻辑。
-- `src/pages/rss.xml.ts`：RSS 输出。
-- `src/utils/url-utils.ts`：文章、标签和分类 URL 生成。
-- `public/assets/profile-avatar.webp`：侧边栏头像。
-- `public/assets/site-banner.webp`：站点顶部横幅。
-- `public/assets/post-cover.webp`：文章封面备选图，当前未引用。
-- `public/assets/public-security-badge.png`：公安联网备案图标，页脚展示时放在备案编号左侧。保持原始 PNG 透明通道，不要加背景或用不透明画布重采样。
-- `public/assets/*.avif`：压缩率更高的备选图片资产，当前未作为主引用格式。
-- `public/favicon/favicon-*.png`：浏览器标签图标和移动端图标。
-- `deploy/nginx/rosata.cn.conf`：与服务器 live 配置同步的完整 Nginx 配置（含 HTTPS、缓存策略、gzip 调优与安全头 include）。
-- `deploy/nginx/rosata-security-headers.conf`：安全响应头片段，对应服务器 `/etc/nginx/snippets/rosata-security-headers.conf`。
+- `apps/rosata-cn/src/config.ts`：站点标题、语言、导航、个人卡片、页脚展示信息、主题色。
+- `apps/rosata-cn/src/content/posts/*.md`：博客文章，每篇文章使用 Markdown frontmatter。
+- `apps/rosata-cn/src/content/spec/about.md`：关于页正文。
+- `apps/rosata-cn/src/content/config.ts`：Astro 内容集合 schema（re-export 主题定义）。
+- `packages/theme/src/components/Footer.astro`：页脚、ICP 号和公安联网信息预留展示逻辑。
+- `packages/theme/src/pages/rss.xml.ts`：RSS 输出实现。
+- `packages/theme/src/utils/url-utils.ts`：文章、标签和分类 URL 生成。
+- `apps/rosata-cn/public/assets/profile-avatar.webp`：侧边栏头像。
+- `apps/rosata-cn/public/assets/site-banner.webp`：站点顶部横幅。
+- `apps/rosata-cn/public/assets/post-cover.webp`：文章封面备选图，当前未引用。
+- `apps/rosata-cn/public/assets/public-security-badge.png`：公安联网备案图标，页脚展示时放在备案编号左侧。保持原始 PNG 透明通道，不要加背景或用不透明画布重采样。
+- `apps/rosata-cn/public/assets/*.avif`：压缩率更高的备选图片资产，当前未作为主引用格式。
+- `apps/rosata-cn/public/favicon/favicon-*.png`：浏览器标签图标和移动端图标。
+- `apps/rosata-cn/deploy/nginx/rosata.cn.conf`：与服务器 live 配置同步的完整 Nginx 配置（含 HTTPS、缓存策略、gzip 调优与安全头 include）。
+- `apps/rosata-cn/deploy/nginx/rosata-security-headers.conf`：安全响应头片段，对应服务器 `/etc/nginx/snippets/rosata-security-headers.conf`。
 
-注意：`deploy/nginx/rosata.cn.conf` 自 2026-09-12 起就是服务器 live 配置的镜像，不再是签发证书前的 bootstrap。标记 `# managed by Certbot` 的行由 Certbot 管理，不要手动改动；其他部分修改后上传，必须先 `nginx -t` 再 `systemctl reload nginx`。安全头片段被 server 级和多个 location 级 include；注意任何自带 `add_header` 的 location 都必须显式 include 该片段，否则会屏蔽 server 级安全头的继承。
+注意：`apps/rosata-cn/deploy/nginx/rosata.cn.conf` 自 2026-09-12 起就是服务器 live 配置的镜像，不再是签发证书前的 bootstrap。标记 `# managed by Certbot` 的行由 Certbot 管理，不要手动改动；其他部分修改后上传，必须先 `nginx -t` 再 `systemctl reload nginx`。安全头片段被 server 级和多个 location 级 include；注意任何自带 `add_header` 的 location 都必须显式 include 该片段，否则会屏蔽 server 级安全头的继承。
 
 ## 3. 本地开发
 
@@ -135,28 +114,28 @@ corepack pnpm dev
 构建静态产物：
 
 ```bash
-corepack pnpm build
+corepack pnpm --filter rosata-cn build
 ```
 
 构建产物目录：
 
 ```text
-dist/
+apps/rosata-cn/dist/
 ```
 
 建议部署前检查：
 
 ```bash
-corepack pnpm check
-corepack pnpm type-check
-corepack pnpm build
+corepack pnpm --filter rosata-cn check
+corepack pnpm --filter rosata-cn type-check
+corepack pnpm --filter rosata-cn build
 ```
 
-`corepack pnpm build` 会先执行 `astro build`，再执行 `pagefind --site dist` 生成搜索索引。
+`corepack pnpm --filter rosata-cn build` 会先执行 `astro build`，再执行 `pagefind --site dist` 生成搜索索引。
 
 ## 4. 写文章
 
-在 `src/content/posts/` 下新增 Markdown 文件，例如：
+在 `apps/rosata-cn/src/content/posts/` 下新增 Markdown 文件，例如：
 
 ```md
 ---
@@ -189,19 +168,20 @@ frontmatter 字段：
 
 ```bash
 corepack pnpm new-post my-new-post
+# 或指定站点：corepack pnpm new-post --app obsidian-kb my-note
 ```
 
 写完文章后至少运行：
 
 ```bash
-corepack pnpm build
+corepack pnpm --filter rosata-cn build
 ```
 
 当前文章暂时不使用 frontmatter 的 `image` 封面图，也不在正文中插图。以后如需恢复统一封面，可在文章 frontmatter 中添加 `image: "/assets/post-cover.webp"`。
 
 ## 5. 修改站点信息
 
-站点展示信息集中在 `src/config.ts`。
+站点展示信息集中在 `apps/rosata-cn/src/config.ts`。
 
 ```ts
 export const siteConfig = {
@@ -299,18 +279,18 @@ cp "public/favicon/favicon-light-32.png" "public/favicon/favicon-dark-32.png"
 标准部署流程：
 
 ```bash
-corepack pnpm check
-corepack pnpm type-check
-corepack pnpm build
-rsync -az --delete -e "ssh -p 42960 -o ConnectTimeout=10" "dist/" root@150.158.127.29:/var/www/rosata_blog/
+corepack pnpm --filter rosata-cn check
+corepack pnpm --filter rosata-cn type-check
+corepack pnpm --filter rosata-cn build
+rsync -az --delete -e "ssh -p 42960 -o ConnectTimeout=10" "apps/rosata-cn/dist/" root@150.158.127.29:/var/www/rosata_blog/
 ```
 
-`rsync --delete` 会删除远程 `/var/www/rosata_blog/` 中本地 `dist/` 不存在的文件。只对站点静态目录使用，不要把目标路径改成 `/var/www/` 或更高层目录。
+`rsync --delete` 会删除远程 `/var/www/rosata_blog/` 中本地 `apps/rosata-cn/dist/` 不存在的文件。只对站点静态目录使用，不要把目标路径改成 `/var/www/` 或更高层目录。
 
 SSH 认证说明：服务器只接受公钥登录。本机私钥已加入 Windows 侧 OpenSSH 的 `ssh-agent`；WSL 侧自己的 `ssh-agent` 可能没有加载私钥（表现为 `Permission denied (publickey)`）。在 WSL 中执行部署时，用 Windows 的 `ssh.exe` 作为 rsync 传输层即可：
 
 ```bash
-rsync -az --delete -e "/mnt/c/Windows/System32/OpenSSH/ssh.exe -p 42960 -o ConnectTimeout=10" "dist/" root@150.158.127.29:/var/www/rosata_blog/
+rsync -az --delete -e "/mnt/c/Windows/System32/OpenSSH/ssh.exe -p 42960 -o ConnectTimeout=10" "apps/rosata-cn/dist/" root@150.158.127.29:/var/www/rosata_blog/
 ```
 
 部署后验证：
@@ -422,7 +402,7 @@ ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
 如果未来重建服务器，推荐流程：
 
 1. 先安装 Nginx。
-2. 用 `deploy/nginx/rosata.cn.conf` 配好 HTTP 站点。
+2. 用 `apps/rosata-cn/deploy/nginx/rosata.cn.conf` 配好 HTTP 站点。
 3. 确认 `http://rosata.cn/` 公网可访问。
 4. 安装 `certbot python3-certbot-nginx`。
 5. 执行：
@@ -514,9 +494,9 @@ tail -n 120 /var/log/letsencrypt/letsencrypt.log
 按顺序检查：
 
 ```bash
-corepack pnpm build
-find dist -maxdepth 3 -type f | sort
-rsync -az --delete -e "ssh -p 42960 -o ConnectTimeout=10" "dist/" root@150.158.127.29:/var/www/rosata_blog/
+corepack pnpm --filter rosata-cn build
+find apps/rosata-cn/dist -maxdepth 3 -type f | sort
+rsync -az --delete -e "ssh -p 42960 -o ConnectTimeout=10" "apps/rosata-cn/dist/" root@150.158.127.29:/var/www/rosata_blog/
 curl --noproxy '*' --max-time 15 -I https://rosata.cn/
 ```
 
@@ -547,7 +527,7 @@ nginx -t && systemctl reload nginx
 - 不要在用户未要求时执行 `git commit`、`git push`、`git reset --hard`。
 - 不要直接覆盖远程 Nginx live 配置，除非已先备份并确认 Certbot 管理段。
 - 远程修改 Nginx 后必须执行 `nginx -t`，成功后才 `systemctl reload nginx`。
-- 部署前必须执行 `corepack pnpm check`、`corepack pnpm type-check` 和 `corepack pnpm build`。
+- 部署前必须执行 `corepack pnpm --filter rosata-cn check`、`corepack pnpm --filter rosata-cn type-check` 和 `corepack pnpm --filter rosata-cn build`。
 - 部署后必须验证 HTTPS 首页、归档页、关于页、至少一篇文章、HTTP 跳转和 RSS。
 - 对 `/var/www/rosata_blog/` 使用 `rsync --delete` 是允许的；不要对更高层目录使用 `--delete`。
 
@@ -556,10 +536,10 @@ nginx -t && systemctl reload nginx
 新增文章并部署：
 
 ```bash
-corepack pnpm check
-corepack pnpm type-check
-corepack pnpm build
-rsync -az --delete -e "ssh -p 42960 -o ConnectTimeout=10" "dist/" root@150.158.127.29:/var/www/rosata_blog/
+corepack pnpm --filter rosata-cn check
+corepack pnpm --filter rosata-cn type-check
+corepack pnpm --filter rosata-cn build
+rsync -az --delete -e "ssh -p 42960 -o ConnectTimeout=10" "apps/rosata-cn/dist/" root@150.158.127.29:/var/www/rosata_blog/
 curl --noproxy '*' --max-time 15 -I https://rosata.cn/
 curl --noproxy '*' --max-time 15 -I https://rosata.cn/archive/
 curl --noproxy '*' --max-time 15 -I https://rosata.cn/about/

@@ -1,7 +1,11 @@
 version: 2
 updates:
   - package-ecosystem: "npm"
-    directory: "/"
+    directories:
+      - "/"
+      - "/apps/rosata-cn"
+      - "/apps/obsidian-kb"
+      - "/packages/theme"
     schedule:
       interval: "daily"
     groups:
